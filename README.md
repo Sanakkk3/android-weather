@@ -17,3 +17,8 @@ http://t.weather.itboy.net/api/weather/city/101280101
 当天基础天气接口  
 http://www.weather.com.cn/data/sk/101280101.html  
 http://www.weather.com.cn/data/cityinfo/101280101.html  
+
+
+
+
+000
