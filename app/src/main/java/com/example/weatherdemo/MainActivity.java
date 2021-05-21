@@ -7,6 +7,7 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 
 import com.example.weatherdemo.Utils.JsonUtils;
 import com.example.weatherdemo.Utils.MyAdapter;
@@ -41,6 +42,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         initView();
+
     }
 
     /**
@@ -74,47 +76,6 @@ public class MainActivity extends AppCompatActivity {
                 tab.setText(titles.get(position));
             }
         }).attach();
-    }
-
-
-    /**
-     * 请求城市网络资源
-     */
-    private void initCityInfoFromJson() {
-        //请求网络资源
-        Handler mainHandler = new Handler(getMainLooper());
-        String url = "http://www.weather.com.cn/data/cityinfo/101280101.html";
-
-        OkHttpClient okHttpClient = new OkHttpClient();
-
-        final Request request = new Request.Builder()
-                .url(url)
-                .get()
-                .build();
-        final Call call = okHttpClient.newCall(request);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Response response = call.execute();
-                    final String str = response.body().string();
-
-                    System.out.println("CityInfo：" + str);
-
-                    mainHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            cityInfo = JsonUtils.getInstance()
-                                    .getCityInfoFromJson(MainActivity.this, str);
-
-                        }
-                    });
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
     }
 
 
