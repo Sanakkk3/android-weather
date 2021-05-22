@@ -66,6 +66,12 @@ public class JsonUtils {
         return sb.toString();
     }
 
+    /**
+     * 从file中读取 城市天气基础信息
+     *
+     * @param context
+     * @return
+     */
     public CityInfo getCityInfoFromFile(Context context) {
 
         CityInfo cityInfo = new CityInfo();
@@ -91,6 +97,13 @@ public class JsonUtils {
         return cityInfo;
     }
 
+    /**
+     * 从网络中读取  城市天气基础信息
+     *
+     * @param context
+     * @param json
+     * @return
+     */
     public CityInfo getCityInfoFromJson(Context context, String json) {
 
         CityInfo cityInfo = new CityInfo();
@@ -108,6 +121,12 @@ public class JsonUtils {
         return cityInfo;
     }
 
+    /**
+     * 从文件中读取  城市天气预告信息
+     *
+     * @param context
+     * @return
+     */
     public WeatherBean getWeatherFromFile(Context context) {
         WeatherBean weatherBean = new WeatherBean();
         InputStream is = null;
@@ -143,6 +162,22 @@ public class JsonUtils {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return weatherBean;
+    }
+
+    /**
+     * 从网络中读取  城市天气预告信息
+     *
+     * @param context
+     * @param json
+     * @return
+     */
+    public WeatherBean getWeatherFromJson(Context context, String json) {
+        WeatherBean weatherBean = new WeatherBean();
+
+        Gson gson = new Gson();
+        weatherBean = gson.fromJson(json, WeatherBean.class);
+
         return weatherBean;
     }
 }

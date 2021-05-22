@@ -45,7 +45,6 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         initView();
-        weatherBean=JsonUtils.getInstance().getWeatherFromFile(this);
     }
 
     /**
