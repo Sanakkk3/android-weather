@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 
+import com.example.weatherdemo.Bean.WeatherBean;
 import com.example.weatherdemo.Utils.JsonUtils;
 import com.example.weatherdemo.Utils.MyAdapter;
 import com.example.weatherdemo.entities.CityInfo;
@@ -31,6 +32,8 @@ public class MainActivity extends AppCompatActivity {
     private ViewPager2 myPager2;
     private TabLayout myTab;
 
+    private WeatherBean weatherBean;
+
     List<String> titles = new ArrayList<>();
     List<Fragment> fragments = new ArrayList<>();
 
@@ -42,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         initView();
-
+        weatherBean=JsonUtils.getInstance().getWeatherFromFile(this);
     }
 
     /**

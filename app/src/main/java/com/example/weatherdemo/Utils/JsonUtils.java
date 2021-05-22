@@ -1,8 +1,9 @@
 package com.example.weatherdemo.Utils;
 
 import android.content.Context;
+import android.util.Log;
 
-import com.example.weatherdemo.MainActivity;
+import com.example.weatherdemo.Bean.WeatherBean;
 import com.example.weatherdemo.entities.CityInfo;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -13,11 +14,12 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
-import java.nio.file.FileStore;
 
 public class JsonUtils {
 
     public static JsonUtils instance; //单例模式
+
+    private static final String TAG = "JsonUtils";
 
     private JsonUtils() {
 
@@ -91,7 +93,7 @@ public class JsonUtils {
 
     public CityInfo getCityInfoFromJson(Context context, String json) {
 
-        CityInfo cityInfo=new CityInfo();
+        CityInfo cityInfo = new CityInfo();
 
         try {
             JSONObject jsonObject = new JSONObject(json);
@@ -99,12 +101,48 @@ public class JsonUtils {
             Gson gson = new Gson();
             cityInfo = gson.fromJson(String.valueOf(jsonDate), (Type) CityInfo.class);
 
-            System.out.println(cityInfo.getCity());
-
         } catch (Exception ex) {
             ex.printStackTrace();
         }
 
         return cityInfo;
+    }
+
+    public WeatherBean getWeatherFromFile(Context context) {
+        WeatherBean weatherBean = new WeatherBean();
+        InputStream is = null;
+
+        try {
+            is = context.getResources().getAssets().open("weather.json");
+            String json = read(is);
+
+            Gson gson = new Gson();
+            weatherBean = gson.fromJson(json, WeatherBean.class);
+
+//            String data = "";
+//            String citykey = "";
+//            String shidu = "";
+//            String low = "";
+//
+//            data = weatherBean.getDate();
+//            citykey = weatherBean.getCityInfo().getCitykey();
+//            shidu = weatherBean.getData().getShidu();
+//
+//            JSONObject jsonObject = new JSONObject(json);
+//            JSONObject jsonData = jsonObject.getJSONObject("data");
+//            low=weatherBean.getData().getForecast().get(0).getLow();
+//
+//            String str = String.valueOf(jsonData);
+//
+//            Log.d(TAG, "测试data数据：" + data);
+//            Log.d(TAG, "测试citykey数据：" + citykey);
+//            Log.d(TAG, "测试shidu数据：" + shidu);
+//            Log.d(TAG, "测试low数据：" + low);
+//            Log.d(TAG, "测试存入Data数据：" + str);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return weatherBean;
     }
 }

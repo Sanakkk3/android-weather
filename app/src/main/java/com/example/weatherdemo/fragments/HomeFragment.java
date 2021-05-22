@@ -62,8 +62,6 @@ public class HomeFragment extends Fragment {
      */
     private void initCityInfoFromJson() {
 
-        System.out.println("开始进行城市信息初始化");
-
         //请求网络资源
         Handler mainHandler = new Handler(Looper.getMainLooper());
         String url = "http://www.weather.com.cn/data/cityinfo/101280101.html";
@@ -81,8 +79,6 @@ public class HomeFragment extends Fragment {
                 try {
                     Response response = call.execute();
                     final String str = response.body().string();
-
-                    System.out.println("CityInfo：" + str);
 
                     mainHandler.post(new Runnable() {
                         @Override
