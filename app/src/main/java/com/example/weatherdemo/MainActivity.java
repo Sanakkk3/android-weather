@@ -3,11 +3,14 @@ package com.example.weatherdemo;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 import androidx.viewpager2.widget.ViewPager2;
 
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.widget.SimpleAdapter;
 
 import com.example.weatherdemo.Bean.WeatherBean;
 import com.example.weatherdemo.Utils.JsonUtils;
@@ -32,12 +35,9 @@ public class MainActivity extends AppCompatActivity {
     private ViewPager2 myPager2;
     private TabLayout myTab;
 
-    private WeatherBean weatherBean;
-
     List<String> titles = new ArrayList<>();
     List<Fragment> fragments = new ArrayList<>();
 
-    private CityInfo cityInfo;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +46,8 @@ public class MainActivity extends AppCompatActivity {
 
         initView();
     }
+
+
 
     /**
      * 初始化组件
@@ -79,7 +81,6 @@ public class MainActivity extends AppCompatActivity {
             }
         }).attach();
     }
-
 
 }
 

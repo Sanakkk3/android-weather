@@ -1,7 +1,5 @@
 package com.example.weatherdemo.fragments;
 
-import android.content.Context;
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -18,14 +16,12 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.example.weatherdemo.Bean.WeatherBean;
-import com.example.weatherdemo.Bean.data;
 import com.example.weatherdemo.Bean.forecast;
-import com.example.weatherdemo.MainActivity;
 import com.example.weatherdemo.R;
 import com.example.weatherdemo.Utils.JsonUtils;
 import com.example.weatherdemo.entities.CityInfo;
-import com.example.weatherdemo.home_page;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -40,7 +36,7 @@ public class HomeFragment extends Fragment {
 
     private static final String TAG = "HomeFragment";
 
-    private TextView tv_ptime, tv_city, tv_weather, tv_maxTemp, tv_temp1, tv_temp2,tv_update;
+    private TextView tv_ptime, tv_city, tv_weather, tv_maxTemp, tv_temp1, tv_temp2, tv_update;
     private ListView lv_yugao;
 
     private CityInfo cityInfo;
@@ -53,15 +49,51 @@ public class HomeFragment extends Fragment {
         return inflate;
     }
 
+    public WeatherBean getWeatherBean() {
+        return weatherBean;
+    }
+
+    public void setWeatherBean(WeatherBean weatherBean) {
+        this.weatherBean = weatherBean;
+    }
+
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
         initView();
-        //默认条件下城市基础信息的初始化
+
+//        //默认条件下城市基础信息的初始化
 //        initCityInfoFromJson();
         //默认条件下城市预告信息的初始化
         initWeatherInfoFromJson();
+
+//        //传递信息
+//        HomeFragment homeFragment=new HomeFragment();
+//        Bundle bundle=new Bundle();
+//        bundle.putSerializable("天气对象",(Serializable) weatherBean);
+//        homeFragment.setArguments(bundle);
+    }
+
+    /**
+     * 可以对fragment的hide和show状态进行监听
+     *
+     * @param hidden
+     */
+    @Override
+    public void onHiddenChanged(boolean hidden) {
+        super.onHiddenChanged(hidden);
+        if (hidden) {
+            //Fragment隐藏时调用
+            HomeFragment homeFragment = new HomeFragment();
+            Bundle bundle = new Bundle();
+            bundle.putString("1", "123");
+            homeFragment.setArguments(bundle);
+            System.out.println("你使用了吗？");
+            Log.d(TAG,"你猜猜~");
+        } else {
+            //Fragment显示时调用
+        }
     }
 
     private void initView() {
@@ -71,7 +103,7 @@ public class HomeFragment extends Fragment {
         tv_maxTemp = getActivity().findViewById(R.id.tv_maxTemp);
         tv_temp1 = getActivity().findViewById(R.id.tv_temp1);
         tv_temp2 = getActivity().findViewById(R.id.tv_temp2);
-        tv_update=getActivity().findViewById(R.id.tv_update);
+        tv_update = getActivity().findViewById(R.id.tv_update);
 
         lv_yugao = getActivity().findViewById(R.id.lv_yugao);
     }
@@ -136,17 +168,18 @@ public class HomeFragment extends Fragment {
                 try {
                     Response response = call.execute();
                     final String str = response.body().string();
-                    
+
                     mainHandler.post(new Runnable() {
                         @Override
                         public void run() {
                             weatherBean = JsonUtils.getInstance()
                                     .getWeatherFromJson(getActivity(), str);
 
-                            chgWeatherData();
-
+                            //给首页更替信息
+                            chgHomeData();
+                            //给listView配上适配器
                             SimpleAdapter simpleAdapter = new SimpleAdapter(getActivity(), getData(), R.layout.activity_yugao_item, new String[]{
-                                    "tv_ymd","tv_week", "iv_pic", "tv_high", "tv_low"}, new int[]{R.id.tv_ymd,R.id.tv_week, R.id.iv_pic, R.id.tv_high, R.id.tv_low});
+                                    "tv_ymd", "tv_week", "iv_pic", "tv_high", "tv_low"}, new int[]{R.id.tv_ymd, R.id.tv_week, R.id.iv_pic, R.id.tv_high, R.id.tv_low});
                             lv_yugao.setAdapter(simpleAdapter);
                         }
                     });
@@ -169,7 +202,7 @@ public class HomeFragment extends Fragment {
             //因为每次数据是要刷新的，所以要new一个新的
             map = new HashMap<String, Object>();
 
-            map.put("tv_ymd",shuju.getYmd());
+            map.put("tv_ymd", shuju.getYmd());
             map.put("tv_week", shuju.getWeek());
             switch (shuju.getType()) {
                 case "小雨":
@@ -208,11 +241,11 @@ public class HomeFragment extends Fragment {
         return list;
     }
 
-    private void chgWeatherData(){
+    private void chgHomeData() {
         tv_ptime.setText(weatherBean.getTime());
         tv_city.setText(weatherBean.getCityInfo().getCity());
-        tv_weather.setText(weatherBean.getData().getForecast().get(0).getType()+"  "+"空气"+weatherBean.getData().getQuality());
-        tv_maxTemp.setText(weatherBean.getData().getWendu()+"℃");
+        tv_weather.setText(weatherBean.getData().getForecast().get(0).getType() + "  " + "空气" + weatherBean.getData().getQuality());
+        tv_maxTemp.setText(weatherBean.getData().getWendu() + "℃");
         tv_temp2.setText(weatherBean.getData().getForecast().get(0).getHigh());
         tv_temp1.setText(weatherBean.getData().getForecast().get(0).getLow());
     }
@@ -225,5 +258,6 @@ public class HomeFragment extends Fragment {
         tv_temp2.setText("最高 " + cityInfo.getTemp2());
         tv_temp1.setText("最低 " + cityInfo.getTemp1());
     }
+
 
 }

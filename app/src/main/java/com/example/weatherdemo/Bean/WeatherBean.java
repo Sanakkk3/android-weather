@@ -1,6 +1,8 @@
 package com.example.weatherdemo.Bean;
 
-public class WeatherBean {
+import java.io.Serializable;
+
+public class WeatherBean implements Serializable {
 
     private String message;
     private String status;
