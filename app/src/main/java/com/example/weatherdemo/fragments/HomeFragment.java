@@ -3,7 +3,6 @@ package com.example.weatherdemo.fragments;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,7 +20,6 @@ import com.example.weatherdemo.R;
 import com.example.weatherdemo.Utils.JsonUtils;
 import com.example.weatherdemo.entities.CityInfo;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -41,6 +39,12 @@ public class HomeFragment extends Fragment {
 
     private CityInfo cityInfo;
     private WeatherBean weatherBean;
+
+
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser){
+
+    }
 
     @Nullable
     @Override
@@ -62,48 +66,20 @@ public class HomeFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
 
         initView();
-
 //        //默认条件下城市基础信息的初始化
 //        initCityInfoFromJson();
         //默认条件下城市预告信息的初始化
         initWeatherInfoFromJson();
-
-//        //传递信息
-//        HomeFragment homeFragment=new HomeFragment();
-//        Bundle bundle=new Bundle();
-//        bundle.putSerializable("天气对象",(Serializable) weatherBean);
-//        homeFragment.setArguments(bundle);
-    }
-
-    /**
-     * 可以对fragment的hide和show状态进行监听
-     *
-     * @param hidden
-     */
-    @Override
-    public void onHiddenChanged(boolean hidden) {
-        super.onHiddenChanged(hidden);
-        if (hidden) {
-            //Fragment隐藏时调用
-            HomeFragment homeFragment = new HomeFragment();
-            Bundle bundle = new Bundle();
-            bundle.putString("1", "123");
-            homeFragment.setArguments(bundle);
-            System.out.println("你使用了吗？");
-            Log.d(TAG,"你猜猜~");
-        } else {
-            //Fragment显示时调用
-        }
     }
 
     private void initView() {
-        tv_ptime = getActivity().findViewById(R.id.tv_ptime);
-        tv_city = getActivity().findViewById(R.id.tv_city);
-        tv_weather = getActivity().findViewById(R.id.tv_weather);
-        tv_maxTemp = getActivity().findViewById(R.id.tv_maxTemp);
-        tv_temp1 = getActivity().findViewById(R.id.tv_temp1);
-        tv_temp2 = getActivity().findViewById(R.id.tv_temp2);
-        tv_update = getActivity().findViewById(R.id.tv_update);
+        tv_ptime = getActivity().findViewById(R.id.tv_ptime2);
+        tv_city = getActivity().findViewById(R.id.tv_city2);
+        tv_weather = getActivity().findViewById(R.id.tv_weather2);
+        tv_maxTemp = getActivity().findViewById(R.id.tv_maxTemp2);
+        tv_temp1 = getActivity().findViewById(R.id.tv_temp12);
+        tv_temp2 = getActivity().findViewById(R.id.tv_temp22);
+        tv_update = getActivity().findViewById(R.id.tv_update2);
 
         lv_yugao = getActivity().findViewById(R.id.lv_yugao);
     }

@@ -47,8 +47,6 @@ public class MainActivity extends AppCompatActivity {
         initView();
     }
 
-
-
     /**
      * 初始化组件
      */
