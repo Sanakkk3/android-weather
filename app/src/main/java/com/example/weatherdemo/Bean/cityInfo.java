@@ -1,7 +1,5 @@
 package com.example.weatherdemo.Bean;
 
-import com.example.weatherdemo.entities.CityInfo;
-
 public class cityInfo {
 
     private String city;

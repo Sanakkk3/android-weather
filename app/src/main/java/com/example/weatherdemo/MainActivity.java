@@ -3,19 +3,11 @@ package com.example.weatherdemo;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentTransaction;
 import androidx.viewpager2.widget.ViewPager2;
 
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.widget.SimpleAdapter;
 
-import com.example.weatherdemo.Bean.WeatherBean;
-import com.example.weatherdemo.Utils.JsonUtils;
 import com.example.weatherdemo.Utils.MyAdapter;
-import com.example.weatherdemo.entities.CityInfo;
 import com.example.weatherdemo.fragments.DetailsFragment;
 import com.example.weatherdemo.fragments.HomeFragment;
 import com.example.weatherdemo.fragments.SettingsFragment;
@@ -25,11 +17,6 @@ import com.google.android.material.tabs.TabLayoutMediator;
 import java.util.ArrayList;
 import java.util.List;
 
-import okhttp3.Call;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-
 public class MainActivity extends AppCompatActivity {
 
     private ViewPager2 myPager2;
@@ -37,6 +24,8 @@ public class MainActivity extends AppCompatActivity {
 
     List<String> titles = new ArrayList<>();
     List<Fragment> fragments = new ArrayList<>();
+
+    private String cityKey="";
 
 
     @Override
@@ -78,6 +67,11 @@ public class MainActivity extends AppCompatActivity {
                 tab.setText(titles.get(position));
             }
         }).attach();
+    }
+
+    public String toCityKey(){
+
+        return cityKey;
     }
 
 }

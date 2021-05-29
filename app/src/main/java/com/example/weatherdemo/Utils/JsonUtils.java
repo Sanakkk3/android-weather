@@ -1,7 +1,6 @@
 package com.example.weatherdemo.Utils;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.example.weatherdemo.Bean.WeatherBean;
 import com.example.weatherdemo.entities.CityInfo;

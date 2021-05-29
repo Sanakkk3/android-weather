@@ -40,12 +40,6 @@ public class HomeFragment extends Fragment {
     private CityInfo cityInfo;
     private WeatherBean weatherBean;
 
-
-    @Override
-    public void setUserVisibleHint(boolean isVisibleToUser){
-
-    }
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
