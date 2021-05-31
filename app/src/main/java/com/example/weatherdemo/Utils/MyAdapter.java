@@ -1,5 +1,7 @@
 package com.example.weatherdemo.Utils;
 
+import android.app.FragmentTransaction;
+
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -12,10 +14,12 @@ import java.util.List;
 
 public class MyAdapter extends FragmentStateAdapter {
 
-    List<Fragment> fragments;
+    private List<Fragment> fragments;
+    private FragmentManager fm;
 
     public MyAdapter(@NonNull FragmentManager fragmentManager, @NonNull Lifecycle lifecycle, List<Fragment> fragments) {
         super(fragmentManager, lifecycle);
+        this.fm=fragmentManager;
         this.fragments = fragments;
     }
 

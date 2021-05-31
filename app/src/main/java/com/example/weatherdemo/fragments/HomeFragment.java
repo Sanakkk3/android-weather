@@ -1,8 +1,13 @@
 package com.example.weatherdemo.fragments;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +21,7 @@ import androidx.fragment.app.Fragment;
 
 import com.example.weatherdemo.Bean.WeatherBean;
 import com.example.weatherdemo.Bean.forecast;
+import com.example.weatherdemo.BroadCastManager;
 import com.example.weatherdemo.R;
 import com.example.weatherdemo.Utils.JsonUtils;
 import com.example.weatherdemo.entities.CityInfo;
@@ -33,12 +39,16 @@ import okhttp3.Response;
 public class HomeFragment extends Fragment {
 
     private static final String TAG = "HomeFragment";
+    private static final String CITYKEY = "101280101";
 
     private TextView tv_ptime, tv_city, tv_weather, tv_maxTemp, tv_temp1, tv_temp2, tv_update;
     private ListView lv_yugao;
 
     private CityInfo cityInfo;
     private WeatherBean weatherBean;
+
+    private boolean isGetData = false;
+    private LocalReceiver mReceiver;
 
     @Nullable
     @Override
@@ -63,7 +73,42 @@ public class HomeFragment extends Fragment {
 //        //默认条件下城市基础信息的初始化
 //        initCityInfoFromJson();
         //默认条件下城市预告信息的初始化
-        initWeatherInfoFromJson();
+        initWeatherInfoFromJson(CITYKEY);
+    }
+
+    @Override
+    public void onResume() {
+
+        initView();
+        //接收广播
+        try {
+            mReceiver = new LocalReceiver();
+            IntentFilter filter=new IntentFilter("cityKey");
+            getActivity().registerReceiver(mReceiver,filter);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        isGetData = true;
+        super.onResume();
+    }
+
+    class LocalReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            //收到广播后的处理
+            String citykey = intent.getStringExtra("citykey");
+            if(citykey!=null){
+                initWeatherInfoFromJson(citykey);
+                Log.d(TAG, "更新成功！");
+                abortBroadcast();
+            }
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        BroadCastManager.getInstance().unregisterReceiver(getActivity(), mReceiver);//注销广播接收者
+        super.onDestroy();
     }
 
     private void initView() {
@@ -120,10 +165,10 @@ public class HomeFragment extends Fragment {
     /**
      * 请求城市预报天气信息网络资源
      */
-    private void initWeatherInfoFromJson() {
+    private void initWeatherInfoFromJson(String citykey) {
         //请求网络资源
         Handler mainHandler = new Handler(Looper.getMainLooper());
-        String url = "http://t.weather.itboy.net/api/weather/city/101280101";
+        String url = "http://t.weather.itboy.net/api/weather/city/" + citykey;
 
         OkHttpClient okHttpClient = new OkHttpClient();
 
@@ -144,6 +189,7 @@ public class HomeFragment extends Fragment {
                         public void run() {
                             weatherBean = JsonUtils.getInstance()
                                     .getWeatherFromJson(getActivity(), str);
+                            Log.d(TAG,str);
 
                             //给首页更替信息
                             chgHomeData();

@@ -2,10 +2,13 @@ package com.example.weatherdemo.fragments;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
@@ -23,34 +26,34 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
+import com.example.weatherdemo.Bean.WeatherBean;
+import com.example.weatherdemo.BroadCastManager;
 import com.example.weatherdemo.DBHelper;
 import com.example.weatherdemo.MainActivity;
+import com.example.weatherdemo.MyAdapter;
 import com.example.weatherdemo.R;
+import com.example.weatherdemo.Utils.JsonUtils;
+import com.example.weatherdemo.entities.cityItem;
+
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 
+import okhttp3.Call;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
 public class SettingsFragment extends Fragment {
-
-    private static final String TAG = "SettingsFragment";
-
-    private EditText et_search;
-    private Spinner sp_city, sp_province;
-    private Button btn_search, btn_insert, btn_delete;
-    private ListView lv_city;
-
-    private ArrayAdapter<String> prvAdapter, cityAdapter;
-    private List<String> cities, provinces;
-    private List<String> provinceList;
-
-    private DBHelper dbHelper=null;
-    private SQLiteDatabase db=null;
-
-    private boolean isGetData = false;
-
     //  数据 省--城市--城市id
     private String[] p_data = {"直辖市", "特别行政区", "黑龙江", "吉林", "辽宁", "内蒙古",
             "河北", "河南", "山东", "山西", "江苏", "安徽", "陕西", "宁夏", "甘肃", "青海",
@@ -169,6 +172,29 @@ public class SettingsFragment extends Fragment {
             {"101140101", "101140701", "101140501", "101140601", "101140201", "101140301", "101140401"},
             {"101340102", "101340201"}};
 
+
+    private static final String TAG = "SettingsFragment";
+
+    private EditText et_search;
+    private Spinner sp_city, sp_province;
+    private Button btn_search, btn_insert, btn_delete;
+    private ListView lv_city;
+
+    private ArrayAdapter<String> prvAdapter, cityAdapter;
+    private List<String> cities, provinces;
+    private List<String> provinceList;
+
+    private DBHelper dbHelper = null;
+    private SQLiteDatabase db = null;
+
+    private boolean isGetData = false;
+    private WeatherBean weatherBean = null;
+
+    private MyAdapter myAdapter = null;
+    List<cityItem> list = new ArrayList<cityItem>();
+
+    private String citykey = "00000000";
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -234,9 +260,7 @@ public class SettingsFragment extends Fragment {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 //数据源与sp_city的适配器
-                Log.d(TAG, "选中省份的位置：" + position);
                 List<String> citys = getCitys(position);
-                Log.d(TAG,citys.get(0));
                 cityAdapter = new ArrayAdapter<String>(
                         getActivity(),
                         android.R.layout.simple_spinner_item,
@@ -249,28 +273,27 @@ public class SettingsFragment extends Fragment {
 
             }
         });
-
-        SimpleAdapter adapter=new SimpleAdapter(getContext(),
-                getDBData(),
-                R.layout.activity_setting_item,
-                new String[]{"tv_province","tv_city"},
-                new int[]{R.id.tv_province,R.id.tv_city});
-        lv_city.setAdapter(adapter);
-
+        //lv_city 添加适配器
+        getDBData();
+        myAdapter = new MyAdapter(getContext(), list);
+        //ListView item 中的删除按钮的点击事件
+        lv_city.setAdapter(myAdapter);
+        //添加 按钮事件
         btn_search.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 String province = et_search.getText().toString();
-                if (province.equals("请输入搜索的省份"))
-                    Toast.makeText(getContext(), "请输入搜索的省份", Toast.LENGTH_SHORT).show();
+                if (province.equals("请输入搜索的省份或城市"))
+                    Toast.makeText(getContext(), "请输入搜索的省份或城市", Toast.LENGTH_SHORT).show();
                 else {
                     int pos = findInP_data(province);
                     if (pos != -1) {
                         sp_province.setSelection(pos);
                     } else {
-                        pos = findInC_data(province);
-                        if (pos != -1) {
-                            sp_province.setSelection(pos);
+                        int[] pos2 = findInC_data(province);
+                        if (pos2[0] != -1 && pos2[1] != -1) {
+                            sp_province.setSelection(pos2[0]);
+                            sp_city.setSelection(pos2[1]);
                         } else {
                             Toast.makeText(getContext(), "请重新输入", Toast.LENGTH_SHORT).show();
                         }
@@ -278,64 +301,128 @@ public class SettingsFragment extends Fragment {
                 }
             }
         });
-        btn_insert.setOnClickListener(new View.OnClickListener(){
+        btn_insert.setOnClickListener(new View.OnClickListener() {
 
             @Override
             public void onClick(View v) {
-                String p_name="",c_name="",c_key="";
-                p_name=sp_province.getSelectedItem().toString();
-                c_name=sp_city.getSelectedItem().toString();
-                c_key=findCityKey(p_name,c_name);
-                if(!c_key.equals("0")){
-                    Cursor c=db.rawQuery("SELECT * FROM citylist where citykey=? ",new String[]{c_key});
-                    if(c.getCount()==0){
-                        ContentValues contentValues=new ContentValues();
-                        contentValues.put("citykey",c_key);
-                        contentValues.put("city",c_name);
-                        contentValues.put("province",p_name);
-                        db.insert("citylist",null,contentValues);
-
-                        SimpleAdapter adapter=new SimpleAdapter(getContext(),
-                                getDBData(),
-                                R.layout.activity_setting_item,
-                                new String[]{"tv_province","tv_city"},
-                                new int[]{R.id.tv_province,R.id.tv_city});
-                        lv_city.setAdapter(adapter);
-                    }else Toast.makeText(getContext(), "已添加！", Toast.LENGTH_SHORT).show();
+                String p_name = "", c_name = "", c_key = "";
+                p_name = sp_province.getSelectedItem().toString();
+                c_name = sp_city.getSelectedItem().toString();
+                c_key = findCityKey(p_name, c_name);
+                if (!c_key.equals("0")) {
+                    Cursor c = db.rawQuery("SELECT * FROM citylist where citykey=? ", new String[]{c_key});
+                    if (c.getCount() == 0) {
+                        ContentValues contentValues = new ContentValues();
+                        contentValues.put("citykey", c_key);
+                        contentValues.put("city", c_name);
+                        contentValues.put("province", p_name);
+                        db.insert("citylist", null, contentValues);
+                        Log.d(TAG, "list添加数据 " + p_name + " " + c_name);
+                        getDBData();
+                        lv_city.setAdapter(myAdapter);
+                        Toast.makeText(getContext(), "已添加！", Toast.LENGTH_SHORT).show();
+                    } else Toast.makeText(getContext(), "已添加！", Toast.LENGTH_SHORT).show();
                     c.close();
-                }else Toast.makeText(getContext(), "没有该城市！", Toast.LENGTH_SHORT).show();
+                } else Toast.makeText(getContext(), "没有该城市！", Toast.LENGTH_SHORT).show();
+            }
+        });
+        btn_delete.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View v) {
+                String p_name = "", c_name = "", c_key = "";
+                p_name = sp_province.getSelectedItem().toString();
+                c_name = sp_city.getSelectedItem().toString();
+                c_key = findCityKey(p_name, c_name);
+
+                if (!c_key.equals("0")) {
+                    Cursor c = db.rawQuery("SELECT * FROM citylist where citykey=? ", new String[]{c_key});
+                    if (c.getCount() != 0) {
+                        db.delete("citylist", "citykey=?", new String[]{c_key});
+                        listDelete(c_name);
+                        lv_city.setAdapter(myAdapter);
+                        Toast.makeText(getContext(), "删除成功！", Toast.LENGTH_SHORT).show();
+                    } else Toast.makeText(getContext(), "已删除！", Toast.LENGTH_SHORT).show();
+                    c.close();
+                } else Toast.makeText(getContext(), "没有该城市！", Toast.LENGTH_SHORT).show();
+            }
+        });
+        //lv_city item的点击事件
+        myAdapter.setOnItemDeleteClickListener(new MyAdapter.onItemDeleteListener() {
+            @Override
+            public void onDeleteClick(int i) {
+                Cursor c = db.rawQuery("SELECT * FROM citylist where city=? ", new String[]{list.get(i).getCity()});
+                if (c.getCount() != 0) {
+                    Log.d(TAG, "将被删除的城市 " + i + "   " + list.get(i).getCity());
+                    db.delete("citylist", "city=?", new String[]{list.get(i).getCity()});
+                    listDelete(list.get(i).getCity());
+                    lv_city.setAdapter(myAdapter);
+                    Toast.makeText(getContext(), "删除成功！", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getContext(), "已删除！", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+        myAdapter.setOnItemUpdateClickListener(new MyAdapter.onItemUpdateListener() {
+            @Override
+            public void onUpdateClick(int i) {
+                Log.d(TAG, "你选择更新的城市数据是：" + list.get(i).getCity());
+                int[] pos = findInC_data(list.get(i).getCity());
+                citykey = cid_data[pos[0]][pos[1]];
+                Log.d(TAG, "企图更新的城市代码是：" + citykey);
+                //发送广播
+                Intent intent=new Intent("cityKey");
+                intent.putExtra("citykey",citykey);
+                getActivity().sendBroadcast(intent);
             }
         });
     }
 
-    private List<Map<String,Object>> getDBData(){
-        List<Map<String,Object>> list = new ArrayList<Map<String, Object>>();
-        Map<String,Object> map = null;
-        Cursor c=db.query("citylist",null,null,null,null,null,null);
-        while(c.moveToNext()) {
-            map = new HashMap<String, Object>();
-            map.put("tv_city", c.getString(c.getColumnIndex("city")));
-            map.put("tv_province", c.getString(c.getColumnIndex("province")));
-            list.add(map);
+    public String getCityKey() {
+        return citykey;
+    }
+
+    private void listDelete(String c_name) {
+        Iterator<cityItem> itemIterator = list.iterator();
+        while (itemIterator.hasNext()) {
+            cityItem item = itemIterator.next();
+            if (item.getCity().equals(c_name)) {
+                Log.d(TAG, "listDelete删除的内容是：" + item.getCity() + " 按要求删除内容是：" + c_name);
+                //这两个很重要
+                itemIterator.remove();
+                list.remove(item);
+            }
+        }
+    }
+
+    private List<cityItem> getDBData() {
+        list.clear();
+        cityItem item = null;
+        Cursor c = db.query("citylist", null, null, null, null, null, null);
+        while (c.moveToNext()) {
+            item = new cityItem(c.getString(c.getColumnIndex("city")),
+                    c.getString(c.getColumnIndex("province")));
+            Log.d(TAG, "添入的数据是：" + item.getCity() + " " + item.getProvince());
+            list.add(item);
         }
         return list;
     }
 
-    private void initDb(){
-        String sql="create table if not exists citylist(" +
+    private void initDb() {
+        String sql = "create table if not exists citylist(" +
                 "citykey varchar(20) primary key," +
                 "city varchar(20)," +
                 "province varchar(20));";
-        dbHelper=new DBHelper(getActivity());
-        db=dbHelper.getWritableDatabase();
+        dbHelper = new DBHelper(getActivity());
+        db = dbHelper.getWritableDatabase();
         db.execSQL(sql);
     }
 
-    private String findCityKey(String p_name,String c_name){
-        for(int i=0;i<p_data.length;i++){
-            if(p_data[i].equals(p_name)){
-                for(int j=0;j<c_data[i].length;j++){
-                    if(c_data[i][j].equals(c_name)) return cid_data[i][j];
+    private String findCityKey(String p_name, String c_name) {
+        for (int i = 0; i < p_data.length; i++) {
+            if (p_data[i].equals(p_name)) {
+                for (int j = 0; j < c_data[i].length; j++) {
+                    if (c_data[i][j].equals(c_name)) return cid_data[i][j];
                 }
             }
         }
@@ -351,8 +438,6 @@ public class SettingsFragment extends Fragment {
 
     private List<String> getCitys(int position) {
         List<String> citys = new ArrayList<String>(); //傻子吧，怎么能写null呢？？？要创建空间啊，后面要添加数据的
-
-        Log.d(TAG, "选中省份有  " + c_data[position].length + "  个城市");
         for (int i = 0; i < c_data[position].length; i++) {
             citys.add(c_data[position][i]);
         }
@@ -366,18 +451,17 @@ public class SettingsFragment extends Fragment {
         return -1;
     }
 
-    private int findInC_data(String province) {
+    private int[] findInC_data(String province) {
+        int[] key = new int[]{-1, -1};
         for (int i = 0; i < p_data.length; i++) {
+            key[0] = i;
             for (int j = 0; j < c_data[i].length; j++) {
-                if (c_data[i][j].equals(province)) return i;
+                if (c_data[i][j].equals(province)) {
+                    key[1] = j;
+                    return key;
+                }
             }
         }
-        return -1;
+        return new int[]{-1, -1};
     }
-
-    private List<String> getSpinnerData(String province) {
-        List<String> citys = null;
-        return citys;
-    }
-
 }

@@ -1,5 +1,9 @@
 package com.example.weatherdemo.fragments;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -15,8 +19,10 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.example.weatherdemo.Bean.WeatherBean;
+import com.example.weatherdemo.BroadCastManager;
 import com.example.weatherdemo.R;
 import com.example.weatherdemo.Utils.JsonUtils;
+import com.example.weatherdemo.Utils.LocalReceiver;
 
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
@@ -26,14 +32,18 @@ import okhttp3.Response;
 public class DetailsFragment extends Fragment {
 
     private static final String TAG = "DetailsFragment";
+    private static final String CITYKEY = "101280101";
 
     private TextView tv_ptime2, tv_city2, tv_weather2, tv_maxTemp2, tv_temp12, tv_temp22, tv_update2;
-    private TextView tv_pm25,tv_pm10,tv_shidu,tv_fengsu,tv_sunrise,tv_sunset,tv_notice;
+    private TextView tv_pm25, tv_pm10, tv_shidu, tv_fengsu, tv_sunrise, tv_sunset, tv_notice;
 
     private WeatherBean weatherBean = null;
     private String str = "空";
 
     private boolean isGetData = false;
+    private String citykey;
+
+    private LocalReceiver mReceiver;
 
     @Nullable
     @Override
@@ -42,45 +52,65 @@ public class DetailsFragment extends Fragment {
         return inflate;
     }
 
-//    @Override
-//    public Animation onCreateAnimation(int transit,boolean enter,int nextAnim){
-//        //进入当前Fragment
-//        if(enter&&isGetData){
-//            isGetData=true;
-//            //这里可以做网络请求或者需要数据刷新的操作
-//            initWeatherInfoFromJson2();
-//        }else{
-//            isGetData=false;
-//        }
-//        return super.onCreateAnimation(transit,enter,nextAnim);
-//    }
-
     @Override
     public void onResume() {
-        if (!isGetData) {
-            initView();
-            //这里可以做网络请求或者需要数据刷新的操作
-            initWeatherInfoFromJson2();
-            isGetData=true;
+
+        initView();
+        //接收广播
+        try {
+            mReceiver = new LocalReceiver();
+            IntentFilter filter=new IntentFilter("cityKey" );
+            getActivity().registerReceiver(mReceiver,filter);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+      //  initWeatherInfoFromJson2(CITYKEY);
+//        if (!isGetData) {
+//            //这里可以做网络请求或者需要数据刷新的操作
+//            Bundle bundle=getArguments();
+//            if (bundle!=null){
+//                citykey=bundle.getString("citykey");
+//                if(citykey!="00000000"){
+//                    Log.d(TAG,"需要更新的城市代码是："+citykey);
+//                    initWeatherInfoFromJson2(citykey);
+//                }
+//            }else{
+//                initWeatherInfoFromJson2(CITYKEY);
+//            }
+//        isGetData = true;
+//
+        isGetData = true;
         super.onResume();
     }
 
-    @Override
-    public void onPause(){
-        super.onPause();
-        isGetData=false;
+    class LocalReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            //收到广播后的处理
+            String citykey = intent.getStringExtra("citykey");
+            initWeatherInfoFromJson2(citykey);
+            Log.d(TAG, "更新成功！");
+            abortBroadcast();
+        }
     }
 
-//    @Override
-//    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-//        super.onViewCreated(view, savedInstanceState);
-//
-//    }
+    @Override
+    public void onDestroy() {
+        BroadCastManager.getInstance().unregisterReceiver(getActivity(), mReceiver);//注销广播接收者
+        super.onDestroy();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        isGetData = false;
+    }
 
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+        initView();
+        initWeatherInfoFromJson2(CITYKEY);
     }
 
     private void initView() {
@@ -93,23 +123,23 @@ public class DetailsFragment extends Fragment {
         tv_temp22 = getActivity().findViewById(R.id.tv_temp22);
         tv_update2 = getActivity().findViewById(R.id.tv_update2);
 
-        tv_pm25=getActivity().findViewById(R.id.tv_pm25);
-        tv_pm10=getActivity().findViewById(R.id.tv_pm10);
-        tv_shidu=getActivity().findViewById(R.id.tv_shidu);
-        tv_fengsu=getActivity().findViewById(R.id.tv_fengsu);
-        tv_sunrise=getActivity().findViewById(R.id.tv_sunrise);
-        tv_sunset=getActivity().findViewById(R.id.tv_sunset);
-        tv_notice=getActivity().findViewById(R.id.tv_notice);
+        tv_pm25 = getActivity().findViewById(R.id.tv_pm25);
+        tv_pm10 = getActivity().findViewById(R.id.tv_pm10);
+        tv_shidu = getActivity().findViewById(R.id.tv_shidu);
+        tv_fengsu = getActivity().findViewById(R.id.tv_fengsu);
+        tv_sunrise = getActivity().findViewById(R.id.tv_sunrise);
+        tv_sunset = getActivity().findViewById(R.id.tv_sunset);
+        tv_notice = getActivity().findViewById(R.id.tv_notice);
 
     }
 
     /**
      * 请求城市预报天气信息网络资源
      */
-    private void initWeatherInfoFromJson2() {
+    private void initWeatherInfoFromJson2(String citykey) {
         //请求网络资源
         Handler mainHandler = new Handler(Looper.getMainLooper());
-        String url = "http://t.weather.itboy.net/api/weather/city/101280101";
+        String url = "http://t.weather.itboy.net/api/weather/city/" + citykey;
 
         OkHttpClient okHttpClient = new OkHttpClient();
 
@@ -155,7 +185,7 @@ public class DetailsFragment extends Fragment {
         tv_pm25.setText(weatherBean.getData().getPm25());
         tv_pm10.setText(weatherBean.getData().getPm10());
         tv_shidu.setText(weatherBean.getData().getShidu());
-        tv_fengsu.setText(weatherBean.getData().getForecast().get(0).getFx() + "    "  + weatherBean.getData().getForecast().get(0).getFl());
+        tv_fengsu.setText(weatherBean.getData().getForecast().get(0).getFx() + "    " + weatherBean.getData().getForecast().get(0).getFl());
         tv_sunrise.setText(weatherBean.getData().getForecast().get(0).getSunrise());
         tv_sunset.setText(weatherBean.getData().getForecast().get(0).getSunset());
         tv_notice.setText(weatherBean.getData().getForecast().get(0).getNotice());
