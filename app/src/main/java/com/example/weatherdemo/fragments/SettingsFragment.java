@@ -210,14 +210,6 @@ public class SettingsFragment extends Fragment {
     }
 
     @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        String cityKey = ((MainActivity) context).toCityKey();
-        Log.d(TAG, cityKey);
-    }
-
-
-    @Override
     public void onResume() {
         if (!isGetData) {
 
@@ -373,7 +365,7 @@ public class SettingsFragment extends Fragment {
                 //发送广播
                 Intent intent=new Intent("cityKey");
                 intent.putExtra("citykey",citykey);
-                getActivity().sendBroadcast(intent);
+                BroadCastManager.getInstance().sendBroadCast(getActivity(),intent);
             }
         });
     }

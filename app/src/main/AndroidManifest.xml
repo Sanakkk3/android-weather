@@ -12,10 +12,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.WeatherDemo">
-        <activity android:name=".settings_page" />
-        <activity android:name=".details_page" />
-        <activity android:name=".home_page" />
-        <activity android:name=".MainActivity">
+          <activity android:name=".MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

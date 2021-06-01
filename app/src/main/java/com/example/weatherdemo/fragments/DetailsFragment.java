@@ -11,7 +11,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -22,7 +21,6 @@ import com.example.weatherdemo.Bean.WeatherBean;
 import com.example.weatherdemo.BroadCastManager;
 import com.example.weatherdemo.R;
 import com.example.weatherdemo.Utils.JsonUtils;
-import com.example.weatherdemo.Utils.LocalReceiver;
 
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
@@ -60,25 +58,10 @@ public class DetailsFragment extends Fragment {
         try {
             mReceiver = new LocalReceiver();
             IntentFilter filter=new IntentFilter("cityKey" );
-            getActivity().registerReceiver(mReceiver,filter);
+            BroadCastManager.getInstance().registerReceiver(getActivity(),mReceiver,filter);
         } catch (Exception e) {
             e.printStackTrace();
         }
-      //  initWeatherInfoFromJson2(CITYKEY);
-//        if (!isGetData) {
-//            //这里可以做网络请求或者需要数据刷新的操作
-//            Bundle bundle=getArguments();
-//            if (bundle!=null){
-//                citykey=bundle.getString("citykey");
-//                if(citykey!="00000000"){
-//                    Log.d(TAG,"需要更新的城市代码是："+citykey);
-//                    initWeatherInfoFromJson2(citykey);
-//                }
-//            }else{
-//                initWeatherInfoFromJson2(CITYKEY);
-//            }
-//        isGetData = true;
-//
         isGetData = true;
         super.onResume();
     }

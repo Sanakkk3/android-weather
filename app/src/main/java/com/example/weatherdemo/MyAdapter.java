@@ -28,11 +28,6 @@ public class MyAdapter extends BaseAdapter {
         this.list = list;
     }
 
-//    public MyAdapter(Context context, List<Map<String, Object>> list) {
-//        this.context = context;
-//        this.list = list;
-//    }
-
     class ViewHolder{
         TextView tv_province,tv_city;
         Button update,delete;

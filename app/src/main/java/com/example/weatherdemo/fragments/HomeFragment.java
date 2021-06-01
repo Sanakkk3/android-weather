@@ -24,7 +24,6 @@ import com.example.weatherdemo.Bean.forecast;
 import com.example.weatherdemo.BroadCastManager;
 import com.example.weatherdemo.R;
 import com.example.weatherdemo.Utils.JsonUtils;
-import com.example.weatherdemo.entities.CityInfo;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,7 +43,6 @@ public class HomeFragment extends Fragment {
     private TextView tv_ptime, tv_city, tv_weather, tv_maxTemp, tv_temp1, tv_temp2, tv_update;
     private ListView lv_yugao;
 
-    private CityInfo cityInfo;
     private WeatherBean weatherBean;
 
     private boolean isGetData = false;
@@ -70,9 +68,6 @@ public class HomeFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
 
         initView();
-//        //默认条件下城市基础信息的初始化
-//        initCityInfoFromJson();
-        //默认条件下城市预告信息的初始化
         initWeatherInfoFromJson(CITYKEY);
     }
 
@@ -84,7 +79,7 @@ public class HomeFragment extends Fragment {
         try {
             mReceiver = new LocalReceiver();
             IntentFilter filter=new IntentFilter("cityKey");
-            getActivity().registerReceiver(mReceiver,filter);
+            BroadCastManager.getInstance().registerReceiver(getActivity(),mReceiver,filter);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -122,46 +117,7 @@ public class HomeFragment extends Fragment {
 
         lv_yugao = getActivity().findViewById(R.id.lv_yugao);
     }
-
-    /**
-     * 请求城市基础天气信息网络资源
-     */
-    private void initCityInfoFromJson() {
-
-        //请求网络资源
-        Handler mainHandler = new Handler(Looper.getMainLooper());
-        String url = "http://www.weather.com.cn/data/cityinfo/101280101.html";
-
-        OkHttpClient okHttpClient = new OkHttpClient();
-
-        final Request request = new Request.Builder()
-                .url(url)
-                .get()
-                .build();
-        final Call call = okHttpClient.newCall(request);
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Response response = call.execute();
-                    final String str = response.body().string();
-
-                    mainHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            cityInfo = JsonUtils.getInstance()
-                                    .getCityInfoFromJson(getActivity(), str);
-                            chgCityData();
-                        }
-                    });
-
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
-    }
-
+    
     /**
      * 请求城市预报天气信息网络资源
      */
@@ -230,6 +186,9 @@ public class HomeFragment extends Fragment {
                 case "大雨":
                     map.put("iv_pic", R.drawable.heavy_rain);
                     break;
+                case "暴雨":
+                    map.put("iv_pic", R.drawable.catsanddog);
+                    break;
                 case "多云":
                     map.put("iv_pic", R.drawable.cloudy);
                     break;
@@ -265,15 +224,4 @@ public class HomeFragment extends Fragment {
         tv_temp2.setText(weatherBean.getData().getForecast().get(0).getHigh());
         tv_temp1.setText(weatherBean.getData().getForecast().get(0).getLow());
     }
-
-    private void chgCityData() {
-        tv_ptime.setText(cityInfo.getPtime());
-        tv_city.setText(cityInfo.getCity());
-        tv_weather.setText(cityInfo.getWeather());
-        tv_maxTemp.setText(cityInfo.getTemp2());
-        tv_temp2.setText("最高 " + cityInfo.getTemp2());
-        tv_temp1.setText("最低 " + cityInfo.getTemp1());
-    }
-
-
 }
